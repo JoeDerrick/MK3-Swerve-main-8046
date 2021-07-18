@@ -4,9 +4,11 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.RemoteSensorSource;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.sensors.CANCoder;
-
+import com.ctre.phoenix.sensors.PigeonIMU;
 
 import edu.wpi.first.wpilibj.geometry.Translation2d;
 import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
@@ -33,6 +35,7 @@ public class SwerveDrivetrain extends SubsystemBase {
   public static double backLeftOffset = 65.0;//294.0
   public static double backRightOffset = 320.0;
 
+  // note errata Cancoders can't have an ID higher than 15 if they are to be used as remote sensors on talon fx
 
   //put your can Id's here!
   public static final int frontLeftDriveId = 1; 
@@ -50,8 +53,18 @@ public class SwerveDrivetrain extends SubsystemBase {
 
   public static final int backRightDriveId = 5; 
   public static final int backRightCANCoderId = 15; 
-  public static final int backRightSteerId = 6;   
-  public static AHRS gyro = new AHRS(SPI.Port.kMXP);
+  public static final int backRightSteerId = 6; 
+  
+  
+  //public static AHRS gyro = new AHRS(SPI.Port.kMXP);
+  //public static PigeonIMU gyro = new PigeonIMU(10);
+  PigeonIMU _pidgey;
+  public static TalonSRX _pigeonTalon = new TalonSRX(10);
+
+
+  
+
+  //maybe add the talon srx and refer t its talon ID
   //add pigeon gyro here
 
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(
@@ -71,7 +84,8 @@ public class SwerveDrivetrain extends SubsystemBase {
       Units.inchesToMeters(-10),
       Units.inchesToMeters(-10)
     )
-  );// looks like a matrix to set relative places on the chassis
+  );// looks like a matrix to set relative places on the chassis.
+  // measure the distance from the center of the robot to center of each wheel
 
  
 
@@ -85,7 +99,22 @@ public class SwerveDrivetrain extends SubsystemBase {
   };
 
   public SwerveDrivetrain() {
-   // gyro.reset(); 
+   // gyro.reset(); //not sure if I commented this out or not
+
+    /* create the pigeon */
+    _pidgey = new PigeonIMU(_pigeonTalon);
+   
+  }
+
+  public double getAngle() {
+    double[] ypr = new double[3];//here is an array  source pigeonAPI:  https://docs.ctre-phoenix.com/en/stable/ch11_BringUpPigeon.html#pigeon-api
+    _pidgey.getYawPitchRoll(ypr); // put the data from the pidgey into this array
+    return ypr[0];// look at the first column in the array
+  }
+
+  public void resetYaw(){
+    _pidgey.setYaw(0,50);
+    _pidgey.setAccumZAngle(0,50);//50 is ktimeouts
   }
 
   /**
@@ -100,15 +129,21 @@ public class SwerveDrivetrain extends SubsystemBase {
   public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative, boolean calibrateGyro) {
     
     if(calibrateGyro){
-      gyro.reset(); //recalibrates gyro offset
+      //gyro.reset(); //recalibrates gyro offset
+     resetYaw();
     }
 
     SwerveModuleState[] states =
       kinematics.toSwerveModuleStates(
-        fieldRelative
-          ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, Rotation2d.fromDegrees(-gyro.getAngle()))
+        fieldRelative // if field relative is true, do the ? line, otherwise do the : line //called a conditional operator condition ? result_if_true : result_if_false
+          ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, Rotation2d.fromDegrees(-getAngle()))
           : new ChassisSpeeds(xSpeed, ySpeed, rot));
+
+
+    // using states generated above normalize using the max wheel speed.
     SwerveDriveKinematics.normalizeWheelSpeeds(states, kMaxSpeed);
+
+
 
     //-----smart Dashboard outputs ----// re-write without the fancy states thing to make it clearer
     for (int i = 0; i < states.length; i++) {
@@ -118,7 +153,7 @@ public class SwerveDrivetrain extends SubsystemBase {
       //SmartDashboard.putNumber(String.valueOf(i), module.)
       //below is a line to comment out from step 5
       module.setDesiredState(state);
-      SmartDashboard.putNumber("gyro Angle", gyro.getAngle());
+      SmartDashboard.putNumber("gyro Angle", getAngle());
     }
   }
 

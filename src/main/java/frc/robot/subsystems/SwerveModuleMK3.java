@@ -40,6 +40,8 @@ public class SwerveModuleMK3 {
     this.canCoder = canCoder;
     this.offset = offset;
 
+
+    //-------------------------------------------------------//
     TalonFXConfiguration angleTalonFXConfiguration = new TalonFXConfiguration();
 
     angleTalonFXConfiguration.slot0.kP = kAngleP;
@@ -51,9 +53,12 @@ public class SwerveModuleMK3 {
     angleTalonFXConfiguration.remoteFilter0.remoteSensorSource = RemoteSensorSource.CANCoder;
     
     angleTalonFXConfiguration.primaryPID.selectedFeedbackSensor = FeedbackDevice.RemoteSensor0;
+
+    // we have made an instance of configuration and now we send it
     angleMotor.configAllSettings(angleTalonFXConfiguration);
     angleMotor.setNeutralMode(NeutralMode.Brake); //not needed but nice to keep the robot stopped when you want it stopped
 
+    // ---------------------------------------------------------//
     TalonFXConfiguration driveTalonFXConfiguration = new TalonFXConfiguration();
 
     driveTalonFXConfiguration.slot0.kP = kDriveP;
@@ -64,6 +69,7 @@ public class SwerveModuleMK3 {
     driveMotor.configAllSettings(driveTalonFXConfiguration);
     driveMotor.setNeutralMode(NeutralMode.Coast);//change to coast i think
 
+    // ----------------------------------------------------------//
     CANCoderConfiguration canCoderConfiguration = new CANCoderConfiguration();
     canCoderConfiguration.magnetOffsetDegrees = offset.getDegrees();
     canCoder.configAllSettings(canCoderConfiguration);
