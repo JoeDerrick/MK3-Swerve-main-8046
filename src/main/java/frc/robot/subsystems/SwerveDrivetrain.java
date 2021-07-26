@@ -85,7 +85,7 @@ public class SwerveDrivetrain extends SubsystemBase {
       Units.inchesToMeters(-10)
     )
   );// looks like a matrix to set relative places on the chassis.
-  // measure the distance from the center of the robot to center of each wheel
+  // TODO measure the distance from the center of the robot to center of each wheel
 
  
 
@@ -156,6 +156,35 @@ public class SwerveDrivetrain extends SubsystemBase {
       SmartDashboard.putNumber("gyro Angle", getAngle());
     }
   }
+  public double getAverageEncoderValue(){
+    SwerveModuleMK3 module0 = modules[0];
+    SwerveModuleMK3 module1 = modules[1];
+    SwerveModuleMK3 module2 = modules[2];
+    SwerveModuleMK3 module3 = modules[3];
+
+    return  (module0.getWheelPosition()+module1.getWheelPosition()+module2.getWheelPosition()+module3.getWheelPosition())/4;
+  
+  }
+
+  public boolean averageDistanceReached(double threshold){
+
+    if (threshold> getAverageEncoderValue()){
+      return true;
+    }
+    else return false;
+  }
+
+  public void resetAllDriveEncoders(){
+    SwerveModuleMK3 module0 = modules[0];
+    SwerveModuleMK3 module1 = modules[1];
+    SwerveModuleMK3 module2 = modules[2];
+    SwerveModuleMK3 module3 = modules[3];
+    module0.resetDriveEncoder();
+    module1.resetDriveEncoder();
+    module2.resetDriveEncoder();
+    module3.resetDriveEncoder();
+  }
+  
 
   @Override
   public void periodic() {

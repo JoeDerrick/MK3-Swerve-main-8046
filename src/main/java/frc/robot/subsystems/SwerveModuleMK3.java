@@ -91,6 +91,14 @@ public class SwerveModuleMK3 {
   return driveMotor.getSelectedSensorVelocity();
   }
 
+  public double getWheelPosition(){
+    return driveMotor.getSelectedSensorPosition(0);
+  }
+
+  public void resetDriveEncoder(){
+    driveMotor.setSelectedSensorPosition(0, 0, 50);
+  }
+
   //:)
   /**
    * Set the speed + rotation of the swerve module from a SwerveModuleState object
